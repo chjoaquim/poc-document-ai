@@ -62,10 +62,7 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Erro ao gerar resposta JSON", http.StatusInternalServerError)
-	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
