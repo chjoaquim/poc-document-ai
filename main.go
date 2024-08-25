@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/chjoaquim/poc-document-ai/documentai"
 	"io"
 	"log"
 	"net/http"
-	"os"
 )
 
 func main() {
@@ -23,25 +24,48 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, header, err := r.FormFile("file")
+	file, _, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Erro ao recuperar o arquivo", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
-	outFile, err := os.Create("/uploads/" + header.Filename)
-	if err != nil {
-		http.Error(w, "Erro ao criar o arquivo", http.StatusInternalServerError)
+
+	buf := make([]byte, 512)
+	_, err = file.Read(buf)
+	if err != nil && err != io.EOF {
+		http.Error(w, "Erro ao ler o arquivo", http.StatusInternalServerError)
 		return
 	}
-	defer outFile.Close()
 
-	_, err = io.Copy(outFile, file)
+	mimeType := http.DetectContentType(buf)
+	fmt.Printf("MIME type detectado: %s\n", mimeType)
+
+	// Reiniciar o leitor do arquivo (necessário porque já lemos alguns bytes)
+	file.Seek(0, io.SeekStart)
+
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "Erro ao salvar o arquivo", http.StatusInternalServerError)
+		http.Error(w, "Erro ao ler o arquivo", http.StatusInternalServerError)
+		return
+	}
+
+	processor := documentai.NewFileProcessor()
+	fileToProcess := &documentai.FileRequest{
+		Content:  fileBytes,
+		MimeType: mimeType,
+	}
+
+	response, err := processor.ProcessDocument(fileToProcess)
+	if err != nil {
+		http.Error(w, "Erro ao processar arquivo", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Upload do arquivo %s realizado com sucesso!\n", header.Filename)
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Erro ao gerar resposta JSON", http.StatusInternalServerError)
+	}
 }

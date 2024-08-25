@@ -24,4 +24,5 @@ go.work
 go.work.sum
 
 # env file
+credentials.json
 .env
