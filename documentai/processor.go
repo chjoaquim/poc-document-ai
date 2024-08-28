@@ -60,7 +60,7 @@ func (f *FileProcessor) ProcessDocumentByOCR(request *FileRequest) (*FileRespons
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	location := os.Getenv("GOOGLE_CLOUD_LOCATION")
 	processorID := os.Getenv("GOOGLE_CLOUD_PROCESSOR_ID")
-	credentialsFile := "./credentials.json"
+	credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 	ctx := context.Background()
 	endpoint := fmt.Sprintf("%s-documentai.googleapis.com:443", location)
@@ -103,7 +103,7 @@ func (f *FileProcessor) ProcessDocumentByGenIA(request *FileRequest) (*FileRespo
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	location := os.Getenv("GOOGLE_CLOUD_LOCATION_GENIA")
 	processorID := os.Getenv("GOOGLE_CLOUD_PROCESSOR_ID__GENIA")
-	credentialsFile := "./credentials.json"
+	credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 	ctx := context.Background()
 	endpoint := fmt.Sprintf("%s-documentai.googleapis.com:443", location)
